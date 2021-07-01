@@ -66,7 +66,7 @@ else:
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 
 
-def get_default_header():
+def get_default_headers():
     return {'Content-Type': 'application/json'}
 
 
@@ -80,7 +80,7 @@ class AbstractHook(models.Model):
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='%(class)ss', on_delete=models.CASCADE)
     event = models.CharField('Event', max_length=64, db_index=True)
     target = models.URLField('Target URL', max_length=255)
-    header = models.JSONField(default=get_default_header)
+    headers = models.JSONField(default=get_default_headers)
 
     class Meta:
         abstract = True
@@ -151,7 +151,7 @@ class AbstractHook(models.Model):
             client.post(
                 url=self.target,
                 data=json.dumps(payload, cls=DjangoJSONEncoder),
-                headers=self.header
+                headers=self.headers
             )
 
         hook_sent_event.send_robust(sender=self.__class__, payload=payload, instance=instance, hook=self)
