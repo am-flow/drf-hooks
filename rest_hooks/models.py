@@ -66,6 +66,10 @@ else:
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 
 
+def get_default_header():
+    return {'Content-Type': 'application/json'}
+
+
 class AbstractHook(models.Model):
     """
     Stores a representation of a Hook.
@@ -76,6 +80,7 @@ class AbstractHook(models.Model):
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='%(class)ss', on_delete=models.CASCADE)
     event = models.CharField('Event', max_length=64, db_index=True)
     target = models.URLField('Target URL', max_length=255)
+    header = models.JSONField(default=get_default_header)
 
     class Meta:
         abstract = True
@@ -146,7 +151,7 @@ class AbstractHook(models.Model):
             client.post(
                 url=self.target,
                 data=json.dumps(payload, cls=DjangoJSONEncoder),
-                headers={'Content-Type': 'application/json'}
+                headers=self.header
             )
 
         hook_sent_event.send_robust(sender=self.__class__, payload=payload, instance=instance, hook=self)
