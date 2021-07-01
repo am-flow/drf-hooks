@@ -1,0 +1,13 @@
+amqp==5.0.6
+asgiref==3.4.0
+billiard==3.6.4.0
+celery==5.1.2
+Django==3.2.4
+django-contrib-comments==2.1.0
+kombu==5.1.0
+mock==1.0.1
+pytz==2021.1
+requests==1.2.3
+six==1.16.0
+sqlparse==0.4.1
+vine==5.0.0
