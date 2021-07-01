@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='hook',
-            name='header',
-            field=models.JSONField(default=rest_hooks.models.get_default_header),
+            name='headers',
+            field=models.JSONField(default=rest_hooks.models.get_default_headers),
         ),
     ]
