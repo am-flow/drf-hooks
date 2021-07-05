@@ -23,7 +23,7 @@ env:
 install:
   - pip install -r devrequirements_${DJANGO_VERSION}.txt
 
-script: python runtests.py
+#script: python runtests.py
 
 matrix:
   exclude:
