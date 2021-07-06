@@ -19,9 +19,10 @@ env:
   - DJANGO_VERSION="1.10"
   - DJANGO_VERSION="1.11"
   - DJANGO_VERSION="2.0"
+  - DJANGO_VERSION="3.2"
 
 install:
-  - pip install -r devrequirements_${DJANGO_VERSION}.txt
+  - pip install -r requirements.txt
 
 #script: python runtests.py
 
