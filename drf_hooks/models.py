@@ -118,7 +118,7 @@ class AbstractHook(models.Model):
         )
 
     @classmethod
-    def find_hooks(cls, event_name, payload, user=None):
+    def find_hooks(cls, event_name, user=None):
         hooks = cls.objects.filter(event=event_name)
         if not user:
             return hooks
