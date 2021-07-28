@@ -4,22 +4,21 @@ except ImportError:
     from distutils.core import setup  # if setuptools breaks
 
 # Dynamically calculate the version
-version_tuple = __import__('rest_hooks').VERSION
+version_tuple = __import__('drf_hooks').VERSION
 version = '.'.join([str(v) for v in version_tuple])
 
 setup(
-    name = 'django-rest-hooks',
+    name = 'drf-hooks',
     description = 'A powerful mechanism for sending real time API notifications via a new subscription model.',
     version = version,
-    author = 'Bryan Helmig',
-    author_email = 'bryan@zapier.com',
-    url = 'http://github.com/zapier/django-rest-hooks',
-    install_requires=['Django>=1.5', 'requests'],
-    packages=['rest_hooks'],
+    author = 'Angira Tripathi',
+    author_email = 'angira.tripathi@am-flow.com',
+    url = 'http://github.com/am-flow/drf-hooks',
+    install_requires=['Django>=3.1', 'requests'],
+    packages=['drf_hooks'],
     package_data={
-        'rest_hooks': [
+        'drf_hooks': [
             'migrations/*.py',
-            'south_migrations/*.py'
         ]
     },
     classifiers = [

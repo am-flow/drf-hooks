@@ -1,49 +1,62 @@
 import requests
+import json
 import time
-from mock import patch, MagicMock, ANY
-
+import copy
 from datetime import datetime
 
-try:
-    # Django <= 1.6 backwards compatibility
-    from django.utils import simplejson as json
-except ImportError:
-    # Django >= 1.7
-    import json
+from mock import patch, MagicMock, ANY
 
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.test import TestCase
 from django.test.utils import override_settings
-try:
-    from django.contrib.comments.models import Comment
-    comments_app_label = 'comments'
-except ImportError:
-    from django_comments.models import Comment
-    comments_app_label = 'django_comments'
+from django_comments.models import Comment
+from django.test.signals import setting_changed
+from django.dispatch import receiver
 
-from rest_hooks import models
-from rest_hooks import signals
-from rest_hooks.admin import HookForm
+from rest_framework import serializers
+
+from drf_hooks import models
+from drf_hooks.client import get_client
+
+from drf_hooks.admin import HookForm
 
 Hook = models.Hook
 
-
 urlpatterns = []
+
 HOOK_EVENTS_OVERRIDE = {
-    'comment.added':        comments_app_label + '.Comment.created',
-    'comment.changed':      comments_app_label + '.Comment.updated',
-    'comment.removed':      comments_app_label + '.Comment.deleted',
-    'comment.moderated':    comments_app_label + '.Comment.moderated',
+    'comment.added':        'django_comments.Comment.created',
+    'comment.changed':      'django_comments.Comment.updated',
+    'comment.removed':      'django_comments.Comment.deleted',
+    'comment.moderated':    'django_comments.Comment.moderated',
     'special.thing':        None,
+}
+
+HOOK_SERIALIZERS_OVERRIDE = {
+    'django_comments.Comment': 'drf_hooks.tests.CommentSerializer',
 }
 
 ALT_HOOK_EVENTS = dict(HOOK_EVENTS_OVERRIDE)
 ALT_HOOK_EVENTS['comment.moderated'] += '+'
+ALT_HOOK_SERIALIZERS = {}
+CLIENT = get_client()
+
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = '__all__'
 
 
-@override_settings(HOOK_EVENTS=HOOK_EVENTS_OVERRIDE, HOOK_DELIVERER=None)
-class RESTHooksTest(TestCase):
+
+@receiver(setting_changed)
+def handle_hook_events_change(sender, setting, *args, **kwargs):
+    if setting == 'HOOK_EVENTS':
+        models.clear_event_lookup()
+
+
+@override_settings(HOOK_EVENTS=HOOK_EVENTS_OVERRIDE, HOOK_SERIALIZERS=HOOK_SERIALIZERS_OVERRIDE, HOOK_DELIVERER=None)
+class DRFHooksTest(TestCase):
     """
     This test Class uses real HTTP calls to a requestbin service, making it easy
     to check responses and endpoint history.
@@ -73,9 +86,9 @@ class RESTHooksTest(TestCase):
     @override_settings(HOOK_EVENTS=ALT_HOOK_EVENTS)
     def test_get_event_actions_config(self):
         self.assertEquals(
-            models.get_event_actions_config(),
+            models.get_event_lookup(),
             {
-                comments_app_label + '.Comment': {
+                'django_comments.Comment': {
                     'created': ('comment.added', False),
                     'updated': ('comment.changed', False),
                     'deleted': ('comment.removed', False),
@@ -83,12 +96,6 @@ class RESTHooksTest(TestCase):
                 },
             }
         )
-
-    def test_no_user_property_fail(self):
-        with self.assertRaises(Exception):
-            models.find_and_fire_hook('some.fake.event', self.user)
-
-        models.find_and_fire_hook('special.thing', self.user)
 
     def test_no_hook(self):
         comment = Comment.objects.create(
@@ -98,66 +105,52 @@ class RESTHooksTest(TestCase):
             comment='Hello world!'
         )
 
-    @patch('rest_hooks.models.client.post', autospec=True)
+    @patch('drf_hooks.tests.CLIENT.post', autospec=True)
     def perform_create_request_cycle(self, method_mock):
         method_mock.return_value = None
-
         target = 'http://example.com/perform_create_request_cycle'
         hook = self.make_hook('comment.added', target)
-
         comment = Comment.objects.create(
             site=self.site,
             content_object=self.user,
             user=self.user,
             comment='Hello world!'
         )
-        # time.sleep(1) # should change a setting to turn off async
-
         return hook, comment, json.loads(method_mock.call_args_list[0][1]['data'])
 
+    @override_settings(HOOK_SERIALIZERS=ALT_HOOK_SERIALIZERS)
     def test_simple_comment_hook(self):
         """
         Uses the default serializer.
         """
         hook, comment, payload = self.perform_create_request_cycle()
-
         self.assertEquals(hook.id, payload['hook']['id'])
         self.assertEquals('comment.added', payload['hook']['event'])
         self.assertEquals(hook.target, payload['hook']['target'])
 
-        self.assertEquals(comment.id, payload['data']['pk'])
+        self.assertEquals(comment.id, payload['data']['fields']['object_pk'])
         self.assertEquals('Hello world!', payload['data']['fields']['comment'])
-        self.assertEquals(comment.user.id, payload['data']['fields']['user'])
+        self.assertEquals(1, payload['data']['fields']['user'])
 
-    def test_comment_hook_serializer_method(self):
+    def test_drf_comment_hook(self):
         """
-        Use custom serialize_hook on the Comment model.
+        Uses the drf serializer.
         """
-        def serialize_hook(comment, hook):
-            return { 'hook': hook.dict(),
-                     'data': { 'id': comment.id,
-                               'comment': comment.comment,
-                               'user': { 'username': comment.user.username,
-                                         'email': comment.user.email}}}
-        Comment.serialize_hook = serialize_hook
         hook, comment, payload = self.perform_create_request_cycle()
-
         self.assertEquals(hook.id, payload['hook']['id'])
         self.assertEquals('comment.added', payload['hook']['event'])
         self.assertEquals(hook.target, payload['hook']['target'])
 
-        self.assertEquals(comment.id, payload['data']['id'])
+        self.assertEquals(str(comment.id), payload['data']['object_pk'])
         self.assertEquals('Hello world!', payload['data']['comment'])
-        self.assertEquals('bob', payload['data']['user']['username'])
+        self.assertEquals(1, payload['data']['user'])
 
-        del Comment.serialize_hook
-
-    @patch('rest_hooks.models.client.post')
+    @patch('drf_hooks.tests.CLIENT.post')
     def test_full_cycle_comment_hook(self, method_mock):
         method_mock.return_value = None
         target = 'http://example.com/test_full_cycle_comment_hook'
 
-        hooks = [self.make_hook(event, target) for event in ['comment.added', 'comment.changed', 'comment.removed']]
+        [self.make_hook(event, target) for event in ['comment.added', 'comment.changed', 'comment.removed']]
 
         # created
         comment = Comment.objects.create(
@@ -166,16 +159,11 @@ class RESTHooksTest(TestCase):
             user=self.user,
             comment='Hello world!'
         )
-        # time.sleep(0.5) # should change a setting to turn off async
-
         # updated
         comment.comment = 'Goodbye world...'
         comment.save()
-        # time.sleep(0.5) # should change a setting to turn off async
-
         # deleted
         comment.delete()
-        # time.sleep(0.5) # should change a setting to turn off async
 
         payloads = [json.loads(call[2]['data']) for call in method_mock.mock_calls]
 
@@ -183,18 +171,18 @@ class RESTHooksTest(TestCase):
         self.assertEquals('comment.changed', payloads[1]['hook']['event'])
         self.assertEquals('comment.removed', payloads[2]['hook']['event'])
 
-        self.assertEquals('Hello world!', payloads[0]['data']['fields']['comment'])
-        self.assertEquals('Goodbye world...', payloads[1]['data']['fields']['comment'])
-        self.assertEquals('Goodbye world...', payloads[2]['data']['fields']['comment'])
+        self.assertEquals('Hello world!', payloads[0]['data']['comment'])
+        self.assertEquals('Goodbye world...', payloads[1]['data']['comment'])
+        self.assertEquals('Goodbye world...', payloads[2]['data']['comment'])
 
-    @patch('rest_hooks.models.client.post')
+    @patch('drf_hooks.tests.CLIENT.post')
     def test_custom_instance_hook(self, method_mock):
-        from rest_hooks.signals import hook_event
+        from drf_hooks.signals import hook_event
 
         method_mock.return_value = None
         target = 'http://example.com/test_custom_instance_hook'
 
-        hook = self.make_hook('comment.moderated', target)
+        self.make_hook('comment.moderated', target)
 
         comment = Comment.objects.create(
             site=self.site,
@@ -209,20 +197,18 @@ class RESTHooksTest(TestCase):
             instance=comment
         )
         # time.sleep(1) # should change a setting to turn off async
-
         payloads = [json.loads(call[2]['data']) for call in method_mock.mock_calls]
-
         self.assertEquals('comment.moderated', payloads[0]['hook']['event'])
-        self.assertEquals('Hello world!', payloads[0]['data']['fields']['comment'])
+        self.assertEquals('Hello world!', payloads[0]['data']['comment'])
 
-    @patch('rest_hooks.models.client.post')
+    @patch('drf_hooks.tests.CLIENT.post')
     def test_raw_custom_event(self, method_mock):
-        from rest_hooks.signals import raw_hook_event
+        from drf_hooks.signals import raw_hook_event
 
         method_mock.return_value = None
         target = 'http://example.com/test_raw_custom_event'
 
-        hook = self.make_hook('special.thing', target)
+        self.make_hook('special.thing', target)
 
         raw_hook_event.send(
             sender=None,
@@ -239,54 +225,7 @@ class RESTHooksTest(TestCase):
         self.assertEquals('special.thing', payload['hook']['event'])
         self.assertEquals('world!', payload['data']['hello'])
 
-    def test_timed_cycle(self):
-        return # basically a debug test for thread pool bit
-        target = 'http://requestbin.zapier.com/api/v1/bin/test_timed_cycle'
-
-        hooks = [self.make_hook(event, target) for event in ['comment.added', 'comment.changed', 'comment.removed']]
-
-        for n in range(4):
-            early = datetime.now()
-            # fires N * 3 http calls
-            for x in range(10):
-                comment = Comment.objects.create(
-                    site=self.site,
-                    content_object=self.user,
-                    user=self.user,
-                    comment='Hello world!'
-                )
-                comment.comment = 'Goodbye world...'
-                comment.save()
-                comment.delete()
-            total = datetime.now() - early
-
-            print(total)
-
-            while True:
-                response = requests.get(target + '/view')
-                sent = response.json
-                if sent:
-                    print(len(sent), models.async_requests.total_sent)
-                if models.async_requests.total_sent >= (30 * (n+1)):
-                    time.sleep(5)
-                    break
-                time.sleep(1)
-
-        requests.delete(target + '/view') # cleanup to be polite
-
-    def test_signal_emitted_upon_success(self):
-        wrapper = lambda *args, **kwargs: None
-        mock_handler = MagicMock(wraps=wrapper)
-
-        signals.hook_sent_event.connect(mock_handler, sender=Hook)
-
-        hook, comment, payload = self.perform_create_request_cycle()
-
-        payload['data']['fields']['submit_date'] = ANY
-        mock_handler.assert_called_with(signal=ANY, sender=Hook, payload=payload, instance=comment, hook=hook)
-
     def test_valid_form(self):
-
         form_data = {
             'user': self.user.id,
             'target': "http://example.com",
@@ -311,12 +250,11 @@ class RESTHooksTest(TestCase):
         form = HookForm(data={})
         self.assertFalse(form.is_valid())
 
-    @override_settings(HOOK_CUSTOM_MODEL='rest_hooks.models.Hook')
+    @override_settings(HOOK_CUSTOM_MODEL='drf_hooks.Hook')
     def test_get_custom_hook_model(self):
         # Using the default Hook model just to exercise get_hook_model's
         # lookup machinery.
-        from rest_hooks.utils import get_hook_model
-        from rest_hooks.models import AbstractHook
+        from drf_hooks.models import AbstractHook, get_hook_model
         HookModel = get_hook_model()
         self.assertIs(HookModel, Hook)
         self.assertTrue(issubclass(HookModel, AbstractHook))

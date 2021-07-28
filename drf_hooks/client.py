@@ -1,8 +1,16 @@
 import threading
 import collections
-
 import requests
+from django.conf import settings
 
+__CLIENT = None
+
+
+def get_client():
+    global __CLIENT
+    if __CLIENT is None:
+        __CLIENT = Client() if getattr(settings, 'HOOK_THREADING', True) else requests.Session()
+    return __CLIENT
 
 class FlushThread(threading.Thread):
     def __init__(self, client):

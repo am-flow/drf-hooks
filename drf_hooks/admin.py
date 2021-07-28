@@ -1,13 +1,7 @@
 from django.contrib import admin
 from django.conf import settings
 from django import forms
-from rest_hooks.utils import get_hook_model
-
-if getattr(settings, 'HOOK_EVENTS', None) is None:
-    raise Exception("You need to define settings.HOOK_EVENTS!")
-
-
-HookModel = get_hook_model()
+from .models import get_hook_model
 
 
 class HookForm(forms.ModelForm):
@@ -18,7 +12,7 @@ class HookForm(forms.ModelForm):
     """
 
     class Meta:
-        model = HookModel
+        model = get_hook_model()
         fields = ['user', 'target', 'event']
 
     def __init__(self, *args, **kwargs):
@@ -27,13 +21,12 @@ class HookForm(forms.ModelForm):
 
     @classmethod
     def get_admin_events(cls):
-        return [(x, x) for x in getattr(settings, 'HOOK_EVENTS', None).keys()]
-
+        return [(x, x) for x in settings.HOOK_EVENTS]
 
 class HookAdmin(admin.ModelAdmin):
-    list_display = [f.name for f in HookModel._meta.fields]
+    list_display = [f.name for f in get_hook_model()._meta.fields]
     raw_id_fields = ['user', ]
     form = HookForm
 
 
-admin.site.register(HookModel, HookAdmin)
+admin.site.register(get_hook_model(), HookAdmin)
