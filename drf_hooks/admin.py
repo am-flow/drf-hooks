@@ -13,7 +13,7 @@ class HookForm(forms.ModelForm):
 
     class Meta:
         model = get_hook_model()
-        fields = ['user', 'target', 'event']
+        fields = ['user', 'target', 'event', 'headers']
 
     def __init__(self, *args, **kwargs):
         super(HookForm, self).__init__(*args, **kwargs)
