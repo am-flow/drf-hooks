@@ -306,8 +306,6 @@ You can also use this to override hook delivery.
 drf-hooks uses a simple Threading pool to deliver your hooks, but you may want to use some kind of background worker.
 Here's an example using Celery:
 
-### Some gotchas:
-
 ```python
 ### settings.py ###
 
