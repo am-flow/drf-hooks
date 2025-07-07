@@ -1,6 +1,8 @@
 PATH  := $(PATH):$(HOME)/.local/bin
 SHELL := env PATH=$(PATH) /bin/bash
 
+.PHONY: build format test lint
+
 build:
 	poetry install
 
@@ -14,6 +16,3 @@ lint:
 
 test:
 	poetry run pytest tests/
-
-mypy:
-	poetry run mypy .

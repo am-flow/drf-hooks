@@ -51,7 +51,6 @@ pytest-mock = "^3.14.0"
 pytest-django = "^4.11.1"
 # linting
 ruff = "^0.1.14"
-mypy = "^1.9.0"
 
 [tool.pytest.ini_options]
 addopts = "--junitxml=pytest_report.xml --cov=./ --cov-report=term --cov-report=xml"
