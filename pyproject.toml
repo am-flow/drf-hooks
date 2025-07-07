@@ -1,0 +1,62 @@
+[tool.poetry]
+name = "drf-hooks"
+version = "0.1.0"
+description = ""
+authors = ["Angira Tripathi <angira.tripathi@am-flow.com>", "Sander Koelstra <sander.koelstra@am-flow.com>", "Domenico Nappo <domenico.nappo@am-flow.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+Django = ">=3.1,<5"
+django-contrib-comments = "2.1.0"
+djangorestframework = ">=3.11.1"
+pytz = "2025.2"
+requests = "^2.32"
+
+[tool.poetry.group.dev.dependencies]
+# general
+ipdb = "^0.13.11"
+ipython = "^8.11.0"
+# tests
+pytest = "^7.2.2"
+pytest-cov = "^4.0.0"
+pytest-mock = "^3.14.0"
+pytest-django = "^4.11.1"
+
+ruff = "^0.1.14"
+mypy = "^1.9.0"
+
+[tool.pytest.ini_options]
+addopts = "--junitxml=pytest_report.xml --cov=./ --cov-report=term --cov-report=xml"
+DJANGO_SETTINGS_MODULE = "tests.settings"
+django_find_project = false
+cache_dir = ".cache/pytest"
+testpaths = ["./tests/"]
+
+[tool.coverage.run]
+omit = ["*/tests/*"]
+disable_warnings = ["couldnt-parse"]
+
+[tool.ruff]
+lint.select = ["F", "E", "W", "I"]
+line-length = 100
+lint.ignore = ["E501"]
+cache-dir = ".cache/ruff"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.djlint]
+profile = "django"
+quiet = true
+use_gitignore = true
+max_attribute_length = 1
+max_blank_lines = 1
+close_void_tags = true
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
