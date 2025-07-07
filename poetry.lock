@@ -270,13 +270,13 @@ bcrypt = ["bcrypt"]
 
 [[package]]
 name = "django-contrib-comments"
-version = "2.1.0"
+version = "2.2.0"
 description = "The code formerly known as django.contrib.comments."
 optional = false
 python-versions = "*"
 files = [
-    {file = "django-contrib-comments-2.1.0.tar.gz", hash = "sha256:d82f1d04690550df026553053903deec0c52dc54212e1b79241b08f0355cff2c"},
-    {file = "django_contrib_comments-2.1.0-py3-none-any.whl", hash = "sha256:e02c7341ea1f4bcdfa347851dbf5e632d3e591d84b4f77de2f90b93398897f3c"},
+    {file = "django-contrib-comments-2.2.0.tar.gz", hash = "sha256:48de00f15677e016a216aeff205d6e00e4391c9a5702136c64119c472b7356da"},
+    {file = "django_contrib_comments-2.2.0-py3-none-any.whl", hash = "sha256:2ca79060bbc8fc5b636981ef6e50f35ab83649af75fc1be47bf770636be3271c"},
 ]
 
 [package.dependencies]
@@ -898,4 +898,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "4694376763fe3464eac0b9544d301965c7ad3e3fbde57597dd79606434c0cd4c"
+content-hash = "c4214d796edde58e807bb7b5b14707c45e472038dcc9e71d3f0a09eaffa88dff"

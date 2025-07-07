@@ -1,14 +1,41 @@
 [tool.poetry]
 name = "drf-hooks"
-version = "0.1.0"
-description = ""
-authors = ["Angira Tripathi <angira.tripathi@am-flow.com>", "Sander Koelstra <sander.koelstra@am-flow.com>", "Domenico Nappo <domenico.nappo@am-flow.com>"]
+version = "0.1.4"
+authors = ["Angira Tripathi <angira.tripathi@am-flow.com>", "Sander Koelstra <sander.koelstra@am-flow.com>"]
 readme = "README.md"
+description = "A Django app for webhooks functionality"
+license = "ISC"
+homepage = "https://github.com/am-flow/drf-hooks"
+repository = "https://github.com/am-flow/drf-hooks"
+keywords = ["django", "hooks", "webhooks"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "Framework :: Django :: 4.0",
+    "Framework :: Django :: 4.1",
+    "Framework :: Django :: 4.2",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+]
+packages = [{include = "drf_hooks"}]
+exclude = [
+    "drf_hooks/tests/*",
+]
 
 [tool.poetry.dependencies]
 python = "^3.9"
 Django = ">=3.1,<5"
-django-contrib-comments = "2.1.0"
+django-contrib-comments = "2.2.0"
 djangorestframework = ">=3.11.1"
 pytz = "2025.2"
 requests = "^2.32"
@@ -22,7 +49,7 @@ pytest = "^7.2.2"
 pytest-cov = "^4.0.0"
 pytest-mock = "^3.14.0"
 pytest-django = "^4.11.1"
-
+# linting
 ruff = "^0.1.14"
 mypy = "^1.9.0"
 
@@ -48,14 +75,6 @@ quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
-
-[tool.djlint]
-profile = "django"
-quiet = true
-use_gitignore = true
-max_attribute_length = 1
-max_blank_lines = 1
-close_void_tags = true
 
 [build-system]
 requires = ["poetry-core"]
