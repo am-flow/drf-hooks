@@ -33,28 +33,6 @@ If you want to make a Django form or API resource, you'll need to do that yourse
 (though we've provided some example bits of code below).
 
 
-### Development
-
-#### Running tests
-
-Clone the repo:
-
-```
-git clone https://github.com/am-flow/drf-hooks && cd drf-hooks
-```
-
-Install dependencies:
-
-```
-make build
-```
-
-Run tests:
-
-```
-make tests
-```
-
 ### Requirements
 
 * Python 3.9+
@@ -344,3 +322,26 @@ class CeleryHook(AbstractHook):
 
 We also don't handle retries or cleanup. Generally, if you get a `410` or
 a bunch of `4xx` or `5xx`, you should delete the Hook and let the user know.
+
+
+### Development
+
+#### Running tests
+
+Clone the repo:
+
+```
+git clone https://github.com/am-flow/drf-hooks && cd drf-hooks
+```
+
+Install dependencies:
+
+```
+make build
+```
+
+Run tests:
+
+```
+make tests
+```
