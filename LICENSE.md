@@ -1,6 +1,6 @@
 ## ISC License
 
-Copyright (c) 2021 AM-Flow b.v.
+Copyright (c) 2021-2025 AM-Flow b.v.
 
 Copyright (c) 2016 Zapier Inc.
 

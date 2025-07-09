@@ -1,0 +1,80 @@
+[tool.poetry]
+name = "drf-hooks"
+version = "0.1.4"
+authors = ["Angira Tripathi <angira.tripathi@am-flow.com>", "Sander Koelstra <sander.koelstra@am-flow.com>"]
+readme = "README.md"
+description = "A Django app for webhooks functionality"
+license = "ISC"
+homepage = "https://github.com/am-flow/drf-hooks"
+repository = "https://github.com/am-flow/drf-hooks"
+keywords = ["django", "hooks", "webhooks"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "Framework :: Django :: 4.0",
+    "Framework :: Django :: 4.1",
+    "Framework :: Django :: 4.2",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+]
+packages = [{include = "drf_hooks"}]
+exclude = [
+    "drf_hooks/tests/*",
+]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+Django = ">=3.1,<5"
+django-contrib-comments = "2.2.0"
+djangorestframework = ">=3.11.1"
+pytz = "2025.2"
+requests = "^2.32"
+
+[tool.poetry.group.dev.dependencies]
+# general
+ipdb = "^0.13.11"
+ipython = "^8.11.0"
+# tests
+pytest = "^7.2.2"
+pytest-cov = "^4.0.0"
+pytest-mock = "^3.14.0"
+pytest-django = "^4.11.1"
+# linting
+ruff = "^0.1.14"
+
+[tool.pytest.ini_options]
+addopts = "--junitxml=pytest_report.xml --cov=./ --cov-report=term --cov-report=xml"
+DJANGO_SETTINGS_MODULE = "tests.settings"
+django_find_project = false
+cache_dir = ".cache/pytest"
+testpaths = ["./tests/"]
+
+[tool.coverage.run]
+omit = ["*/tests/*"]
+disable_warnings = ["couldnt-parse"]
+
+[tool.ruff]
+lint.select = ["F", "E", "W", "I"]
+line-length = 100
+lint.ignore = ["E501"]
+cache-dir = ".cache/ruff"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

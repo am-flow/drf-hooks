@@ -2,18 +2,16 @@
 
 drf-hooks is a fork of [Zapier's django-rest-hooks](https://github.com/zapier/django-rest-hooks), which is unfortunately not maintained anymore.
 
-drf-hooks adds closer DRF integration by allowing you to specify DRF serializers to use for each model rather than requiring a `serialize_hook()` method on your models. It also allows hooks to specify custom headers to be added in the hook request (for instance for authentication).
-
 
 ## What are REST Hooks?
 
 REST Hooks are fancier versions of webhooks. Traditional webhooks are usually
 managed manually by the user, but REST Hooks are not! They encourage RESTful
 access to the hooks (or subscriptions) themselves. Add one, two or 15 hooks for
-any combination of event and URLs, then get notificatied in real-time by our
+any combination of event and URLs, then get notified in real-time by our
 bundled threaded callback mechanism.
 
-The best part is: by reusing Django's great signals framework, this library is
+The best part is: by reusing Django's signals framework, this library is
 dead simple. Here's how to get started:
 
 1. Add `'drf_hooks'` to installed apps in settings.py.
@@ -34,48 +32,24 @@ provides a handy framework or reference implementation for which to build upon.
 If you want to make a Django form or API resource, you'll need to do that yourself
 (though we've provided some example bits of code below).
 
-### Changelog
-
-#### Version 0.1.0:
-
-- Forked from zapier rest hooks
-- Support for DRF serializers
-- Custom hook header support
-
-
-### Development
-
-Running the tests for Django REST Hooks is very easy, just:
-
-```
-git clone https://github.com/am-flow/drf-hooks && cd drf-hooks
-```
-
-Next, you'll want to make a virtual environment (we recommend using virtualenvwrapper
-but you could skip this we suppose) and then install dependencies:
-
-```
-mkvirtualenv drf-hooks
-pip install -r requirements.txt
-```
-
-Now you can run the tests!
-
-```
-python runtests.py
-```
 
 ### Requirements
 
-* Python 3.7+ (tested on 3.7)
-* Django 3.1+ (tested on 3.1)
+* Python 3.9+
+* Django 3.1+
+* Django REST framework 3.11+
+
 
 ### Installing & Configuring
 
-We recommend pip to install drf-hooks:
-
 ```
 pip install drf-hooks
+```
+
+or
+
+```
+poetry add drf-hooks
 ```
 
 Next, you'll need to add `drf_hooks` to `INSTALLED_APPS` and configure
@@ -106,6 +80,9 @@ HOOK_SERIALIZERS = {
 
 
 ### bookstore/models.py ###
+from django.db import models
+from rest_framework import serializers
+
 
 class Book(models.Model):
     # NOTE: it is important to have a user property
@@ -134,7 +111,7 @@ class Book(models.Model):
 
 ### bookstore/serializers.py ###
 
-class BookSerializer(serializers.ModelSerializer)
+class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = '__all__'
@@ -144,19 +121,19 @@ For the simplest experience, you'll just piggyback off the standard ORM which wi
 handle the basic `created`, `updated` and `deleted` signals & events:
 
 ```python
->>> from django.contrib.auth.models import User
->>> from drf_hooks.models import Hook
->>> jrrtolkien = User.objects.create(username='jrrtolkien')
->>> hook = Hook(user=jrrtolkien,
+from django.contrib.auth.models import User
+from drf_hooks.models import Hook
+jrrtolkien = User.objects.create(username='jrrtolkien')
+hook = Hook(user=jrrtolkien,
                 event='book.added',
                 target='http://example.com/target.php')
->>> hook.save()     # creates the hook and stores it for later...
->>> from bookstore.models import Book
->>> book = Book(user=jrrtolkien,
+hook.save()     # creates the hook and stores it for later...
+from bookstore.models import Book
+book = Book(user=jrrtolkien,
                 title='The Two Towers',
                 pages=327,
                 fiction=True)
->>> book.save()     # fires off 'bookstore.Book.created' hook automatically
+book.save()     # fires off 'bookstore.Book.created' hook automatically
 ...
 ```
 
@@ -184,15 +161,18 @@ triggered anyways.
 
 ```python
 ...
->>> book.title += ': Deluxe Edition'
->>> book.pages = 352
->>> book.save()     # would fire off 'bookstore.Book.updated' hook automatically
->>> book.delete()   # would fire off 'bookstore.Book.deleted' hook automatically
+book.title += ': Deluxe Edition'
+book.pages = 352
+book.save()     # would fire off 'bookstore.Book.updated' hook automatically
+book.delete()   # would fire off 'bookstore.Book.deleted' hook automatically
 ```
 
 You can also fire custom events with an arbitrary payload:
 
 ```python
+import datetime
+from django.contrib.auth.models import User
+
 from drf_hooks.signals import raw_hook_event
 
 user = User.objects.get(id=123)
@@ -342,3 +322,26 @@ class CeleryHook(AbstractHook):
 
 We also don't handle retries or cleanup. Generally, if you get a `410` or
 a bunch of `4xx` or `5xx`, you should delete the Hook and let the user know.
+
+
+### Development
+
+#### Running tests
+
+Clone the repo:
+
+```
+git clone https://github.com/am-flow/drf-hooks && cd drf-hooks
+```
+
+Install dependencies:
+
+```
+make build
+```
+
+Run tests:
+
+```
+make tests
+```

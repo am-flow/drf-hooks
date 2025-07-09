@@ -16,5 +16,5 @@ class HookSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_hook_model()
-        fields = '__all__'
-        read_only_fields = ('user',)
+        fields = "__all__"
+        read_only_fields = ("user",)
