@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "drf-hooks"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["Angira Tripathi <angira.tripathi@am-flow.com>", "Sander Koelstra <sander.koelstra@am-flow.com>"]
 readme = "README.md"
 description = "A Django app for webhooks functionality"
