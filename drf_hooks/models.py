@@ -79,7 +79,9 @@ class AbstractHook(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
-    user = models.ForeignKey(get_user_model(), related_name="%(class)ss", on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, related_name="%(class)ss", on_delete=models.CASCADE
+    )
     event = models.CharField("Event", max_length=64, db_index=True)
     target = models.URLField("Target URL", max_length=255)
     headers = models.JSONField(default=get_default_headers)
